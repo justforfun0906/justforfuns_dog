@@ -1,5 +1,5 @@
 import discord
-
+import random
 ACCESS_TOKEN = open('token.txt', 'r').read()
 
 # Intents are bitwise values, identifying which correlate to a set of related events.
@@ -27,7 +27,37 @@ async def on_message(message: discord.Message):
         message.content
     ))
     # Send same message content back to that channel
-    await message.channel.send(message.content)
+    if(message.content=="countdown"):
+        a = 5
+        while(a):
+            await message.channel.send(a)
+            a-=1
+@client.event
+async def guess(ans, message:discord.message):
+    if message.author == client.user:
+        return 0
+    if int(message.content) > ans:
+        await message.channel.send("guess smaller")
+        return 1
+    elif int(message.content) < ans:
+        await message.channel.send("guess bigger")
+        return 1
+    elif int(message.content) == ans :
+        await message.channel.send("you're right")
+        return 0
+    else:
+        return 0
+    
+@client.event
+async def game_start(message: discord.message):
+    if message.author == client.user:
+        return
+    if message.content == "game start":
+        ans = random.randint(1,10000)
+        await message.channel.send("guess a number between 1 to 10000")
+        while(guess(ans)!=0):
+            guess(ans,message)
+
 
 # Run the Discord BOT
 if __name__ == '__main__':
