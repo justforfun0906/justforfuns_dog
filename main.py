@@ -1,15 +1,14 @@
 import discord
+from discord.ext import commands
+from datetime import datetime, time, timedelta
 import random
 import requests
 import json
-from datetime import datetime
 
-now = datetime.now()
-currert_time = now.strftime("%H:%M:%S")
-authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
-url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-053"
-res = requests.get(url, {"Authorization": authorization}).json()
-locations = res["records"]["locations"][0]["location"]
+bot = commands.Bot(command_prefix="$")
+WHEN = time(22, 0, 0)  # 6:00 AM
+channel_id = 1006250336954089532 # cheneral channel ID
+
 ACCESS_TOKEN = open('token.txt', 'r').read()
 
 game_start = False
@@ -23,10 +22,15 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 # When the bot has successfully logged in to the server, on_ready() will be triggered.
+
 @client.event
 async def weather(message: discord.Message):
-    global locations
-    global currert_time
+    now = datetime.now()
+    currert_time = now.strftime("%H:%M:%S")
+    authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
+    url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-053"
+    res = requests.get(url, {"Authorization": authorization}).json()
+    locations = res["records"]["locations"][0]["location"]
     for location in locations:
         if location["locationName"]=="東區":
             print(location["locationName"])
@@ -78,8 +82,13 @@ async def on_message(message: discord.Message):
     ))
      #Send same message content back to that channel
     if(message.content=="天氣"):
+        now = datetime.now()
+        currert_time = now.strftime("%H:%M:%S")
+        authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
+        url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-053"
+        res = requests.get(url, {"Authorization": authorization}).json()
+        locations = res["records"]["locations"][0]["location"]
         message.channel.send("searching weather forecasts")
-        global locations
         for location in locations:
             if location["locationName"]=="東區":
                 print(location["locationName"])
@@ -91,7 +100,7 @@ async def on_message(message: discord.Message):
                         timeDict = timeDicts[0]
                         date , time = timeDict["startTime"].split()
                         print(timeDict["startTime"], timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-                        msg = time + timeDict["elementValue"][0]["value"]
+                        msg = timeDict["startTime"] + timeDict["elementValue"][0]["value"]
                         await message.channel.send(msg)
     if(message.content=="countdown"):
         a = 5
@@ -116,6 +125,24 @@ async def on_message(message: discord.Message):
         else:
             await message.channel.send("You're right!")
             game_start = False
+            
+
+async def background_task():
+    now = datetime.utcnow()
+    if now.time() > WHEN:  # Make sure loop doesn't start after {WHEN} as then it will send immediately the first time as negative seconds will make the sleep yield instantly
+        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
+        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start 
+    while True:
+        now = datetime.utcnow() # You can do now() or a specific timezone if that matters, but I'll leave it with utcnow
+        target_time = datetime.combine(now.date(), WHEN)  # 6:00 PM today (In UTC)
+        seconds_until_target = (target_time - now).total_seconds()
+        await asyncio.sleep(seconds_until_target)  # Sleep until we hit the target time
+        await called_once_a_day()  # Call the helper function that sends the message
+        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
+        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start a new iteration
+
 # Run the Discord BOT
 if __name__ == '__main__':
     client.run(ACCESS_TOKEN)
