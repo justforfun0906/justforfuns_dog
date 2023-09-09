@@ -5,11 +5,12 @@ import requests
 import json
 import threading
 from datetime import datetime, time, timedelta
-from discord.ext import tasks
+from discord.ext import tasks, commands
 intents = discord.Intents.all()
 client = discord.Client(intents = intents)
 token = open('token.txt', 'r').read() #enter your bot's token and it should be a string
-channel_id = 1006250336954089532#enter your channel id and it should be a integer   
+channel_id = 1006250336954089532#enter your channel id and it should be a integer  
+#bot = commands.Bot(intents= intents, command_prefix="$") 
 
 @tasks.loop(seconds=10)
 async def weather():

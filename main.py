@@ -6,7 +6,6 @@ import requests
 import schedule
 import json
 
-bot = commands.Bot(command_prefix="$")
 WHEN = time(22, 0, 0)  # 6:00 AM
 channel_id = 1006250336954089532 # cheneral channel ID
 
@@ -44,9 +43,7 @@ async def weather(message: discord.Message):
                         date , time = timeDict["startTime"].split()
                         if currert_time == time :
                             print(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-                            message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-schedule.every().day.at("7:00").do(weather)
-schedule.every().day.at("18:00").do(weather)    
+                            message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"]) 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
