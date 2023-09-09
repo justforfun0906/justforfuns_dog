@@ -1,5 +1,15 @@
 import discord
 import random
+import requests
+import json
+from datetime import datetime
+
+now = datetime.now()
+currert_time = now.strftime("%H:%M:%S")
+authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
+url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-053"
+res = requests.get(url, {"Authorization": authorization}).json()
+locations = res["records"]["locations"][0]["location"]
 ACCESS_TOKEN = open('token.txt', 'r').read()
 
 game_start = False
@@ -13,6 +23,24 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 # When the bot has successfully logged in to the server, on_ready() will be triggered.
+@client.event
+async def weather(message: discord.Message):
+    global locations
+    global currert_time
+    for location in locations:
+        if location["locationName"]=="東區":
+            print(location["locationName"])
+            weatherElements = location["weatherElement"]
+            for weatherElement in weatherElements:
+                #print("weather element ={}".format(weatherElement))
+                if weatherElement["elementName"] == "PoP12h":
+                    timeDicts = weatherElement["time"]
+                    for timeDict in timeDicts:
+                        date , time = timeDict["startTime"].split()
+                        if currert_time == time :
+                            print(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
+                            message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
+    
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
@@ -36,6 +64,7 @@ genshin = ["""痾…我是你們的朋友，但我有玩原神欸其實，我不
             """无知时诋毁原神，懂事时理解原神，成熟时追随原神，幻想中成为原神！信仰原神就会把它当作黑夜一望无际的大海上给迷途的船只指引的灯塔，在烈日炎炎的夏天吹来的一股清风，在寒风刺骨的冬天里燃起的阵阵篝火！米门!""",
             """在原神这一神作的面前，我就像一个一丝不挂的原始人突然来到了现代都市，二次元已如高楼大厦将我牢牢地吸引，开放世界就突然变成那喇叭轰鸣的汽车，不仅把我吓个措手不及，还让我瞬间将注意完全放在了这新的奇物上面，而还没等我稍微平复心情，纹化输出的出现就如同眼前遮天蔽日的宇宙战舰，将我的世界观无情地粉碎，使我彻底陷入了忘我的迷乱，狂泄不止。
 原神，那眼花缭乱的一切都让我感到震撼，但是我那贫瘠的大脑却根本无法理清其中任何的逻辑，巨量的信息和情感泄洪一般涌入我的意识，使我既恐惧又兴奋，既悲愤又自卑，既惊讶又欢欣，这种恍若隔世的感觉恐怕只有艺术史上的巅峰之作才能够带来。""",]
+
 @client.event
 async def on_message(message: discord.Message):
     # When author is BOT itself, ignore
@@ -48,6 +77,22 @@ async def on_message(message: discord.Message):
         message.content
     ))
      #Send same message content back to that channel
+    if(message.content=="天氣"):
+        message.channel.send("searching weather forecasts")
+        global locations
+        for location in locations:
+            if location["locationName"]=="東區":
+                print(location["locationName"])
+                weatherElements = location["weatherElement"]
+                for weatherElement in weatherElements:
+                    #print("weather element ={}".format(weatherElement))
+                    if weatherElement["elementName"] == "WeatherDescription":
+                        timeDicts = weatherElement["time"]
+                        timeDict = timeDicts[0]
+                        date , time = timeDict["startTime"].split()
+                        print(timeDict["startTime"], timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
+                        msg = time + timeDict["elementValue"][0]["value"]
+                        await message.channel.send(msg)
     if(message.content=="countdown"):
         a = 5
         while(a):
