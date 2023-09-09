@@ -24,27 +24,6 @@ client = discord.Client(intents=intents)
 # When the bot has successfully logged in to the server, on_ready() will be triggered.
 
 @client.event
-async def weather(message: discord.Message):
-    now = datetime.now()
-    currert_time = now.strftime("%H:%M:%S")
-    authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
-    url = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-053"
-    res = requests.get(url, {"Authorization": authorization}).json()
-    locations = res["records"]["locations"][0]["location"]
-    for location in locations:
-        if location["locationName"]=="東區":
-            print(location["locationName"])
-            weatherElements = location["weatherElement"]
-            for weatherElement in weatherElements:
-                #print("weather element ={}".format(weatherElement))
-                if weatherElement["elementName"] == "PoP12h":
-                    timeDicts = weatherElement["time"]
-                    for timeDict in timeDicts:
-                        date , time = timeDict["startTime"].split()
-                        if currert_time == time :
-                            print(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-                            message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"]) 
-@client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
 
@@ -70,6 +49,7 @@ genshin = ["""痾…我是你們的朋友，但我有玩原神欸其實，我不
 
 @client.event
 async def on_message(message: discord.Message):
+    channel= client.get_channel(channel_id)
     # When author is BOT itself, ignore
     if message.author == client.user:
         return
@@ -100,7 +80,7 @@ async def on_message(message: discord.Message):
                         date , time = timeDict["startTime"].split()
                         print(timeDict["startTime"], timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
                         msg = timeDict["startTime"] + timeDict["elementValue"][0]["value"]
-                        await message.channel.send(msg)
+                        await channel.send(msg)
     if(message.content=="countdown"):
         a = 5
         while(a):
@@ -125,22 +105,6 @@ async def on_message(message: discord.Message):
             await message.channel.send("You're right!")
             game_start = False
             
-
-async def background_task():
-    now = datetime.utcnow()
-    if now.time() > WHEN:  # Make sure loop doesn't start after {WHEN} as then it will send immediately the first time as negative seconds will make the sleep yield instantly
-        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
-        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start 
-    while True:
-        now = datetime.utcnow() # You can do now() or a specific timezone if that matters, but I'll leave it with utcnow
-        target_time = datetime.combine(now.date(), WHEN)  # 6:00 PM today (In UTC)
-        seconds_until_target = (target_time - now).total_seconds()
-        await asyncio.sleep(seconds_until_target)  # Sleep until we hit the target time
-        await called_once_a_day()  # Call the helper function that sends the message
-        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
-        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start a new iteration
 
 # Run the Discord BOT
 if __name__ == '__main__':
