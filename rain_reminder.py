@@ -1,17 +1,15 @@
-from discord.ext import commands
-from datetime import datetime, time, timedelta
+import discord
+import schedule
+import time
 import requests
 import json
-import asyncio
+from datetime import datetime, time, timedelta
+intents = discord.Intents.all()
+client = discord.Client(intents = intents)
+token = open('token.txt', 'r').read() #enter your bot's token and it should be a string
+channel_id = 1006250336954089532#enter your channel id and it should be a integer   
 
-bot = commands.Bot(command_prefix="$")
-WHEN = time(22, 0, 0)  # 6:00 PM
-channel_id = 1006250336954089532 # Put your channel id here
-ACCESS_TOKEN = open('token.txt', 'r').read()
-
-async def called_once_a_day():  # Fired every day
-    await bot.wait_until_ready()  # Make sure your guild cache is ready so the channel can be found via get_channel
-    channel = bot.get_channel(channel_id) # Note: It's more efficient to do bot.get_guild(guild_id).get_channel(channel_id) as there's less looping involved, but just get_channel still works fine
+async def weather(message: discord.Message):
     now = datetime.now()
     currert_time = now.strftime("%H:%M:%S")
     authorization = "CWB-4E884048-6F63-4D56-AA33-D37CD194C120"
@@ -30,25 +28,11 @@ async def called_once_a_day():  # Fired every day
                         date , time = timeDict["startTime"].split()
                         if currert_time == time :
                             print(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-                            await channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
+                            message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
+schedule.every(10).seconds.do(weather)
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
+    
 
-async def background_task():
-    now = datetime.utcnow()
-    if now.time() > WHEN:  # Make sure loop doesn't start after {WHEN} as then it will send immediately the first time as negative seconds will make the sleep yield instantly
-        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
-        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start 
-    while True:
-        now = datetime.utcnow() # You can do now() or a specific timezone if that matters, but I'll leave it with utcnow
-        target_time = datetime.combine(now.date(), WHEN)  # 6:00 PM today (In UTC)
-        seconds_until_target = (target_time - now).total_seconds()
-        await asyncio.sleep(seconds_until_target)  # Sleep until we hit the target time
-        await called_once_a_day()  # Call the helper function that sends the message
-        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
-        seconds = (tomorrow - now).total_seconds()  # Seconds until tomorrow (midnight)
-        await asyncio.sleep(seconds)   # Sleep until tomorrow and then the loop will start a new iteration
-
-
-if __name__ == "__main__":
-    bot.loop.create_task(background_task())
-    bot.run(ACCESS_TOKEN)
+client.run(token)

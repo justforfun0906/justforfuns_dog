@@ -3,6 +3,7 @@ from discord.ext import commands
 from datetime import datetime, time, timedelta
 import random
 import requests
+import schedule
 import json
 
 bot = commands.Bot(command_prefix="$")
@@ -44,7 +45,8 @@ async def weather(message: discord.Message):
                         if currert_time == time :
                             print(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
                             message.channel.send(time, timeDict["elementValue"][0]["value"], timeDict["elementValue"][0]["measures"])
-    
+schedule.every().day.at("7:00").do(weather)
+schedule.every().day.at("18:00").do(weather)    
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
