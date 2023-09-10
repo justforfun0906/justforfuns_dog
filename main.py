@@ -7,7 +7,7 @@ import schedule
 import json
 
 WHEN = time(22, 0, 0)  # 6:00 AM
-channel_id = 1006250336954089532 # cheneral channel ID
+channel_id = 1149239079641305100 # cheneral channel ID
 
 ACCESS_TOKEN = open('token.txt', 'r').read()
 
@@ -94,7 +94,7 @@ async def on_message(message: discord.Message):
         await message.channel.send(game_start)
     if("原神" in message.content or "不如原" in message.content or "genshin" in message.content):
         iter = random.randint(0,15)
-        await message.channel.send(genshin[iter])
+        await channel.send(genshin[iter])
     if(game_start == True):
         guess = int(message.content)
         if(guess>game_ans):
